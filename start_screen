@@ -1,0 +1,76 @@
+#!/bin/sh
+
+set -eu
+
+die()
+{
+	warn $@
+	exit 1
+}
+
+warn()
+{
+	>&2 echo $@
+}
+
+load_host_configuration()
+{
+	local _host=$(hostname)
+	local _config=~/.${_host}.conf
+
+	[ -e "${_config}" ] || \
+	    die "No configuration found for ${_host}"
+
+	. "${_config}"
+}
+
+wipe_dead_instance()
+{
+	if [ "$(screen -ls | grep -c Dead)" = "0" ]; then
+		return
+	fi
+
+	screen -wipe
+}
+
+parse_arguments()
+{
+	if [ $# = 0 ]; then
+		return
+	fi
+
+	SCREEN_NAMES=$1
+}
+
+# Configuration:
+#
+# SCREEN_NAMES: space separated list of each `screen' name.
+#
+# SCREEN_HOME_<name>: working directory associated with 'screen` instance <name>
+#
+SCREEN_NAMES=""
+
+load_host_configuration
+
+wipe_dead_instance
+
+parse_arguments "$@"
+
+for SNAME in ${SCREEN_NAMES}; do
+	if [ $(screen -ls | grep -c '\.'${SNAME}'	') != "0" ]; then
+		warn "${SNAME} is already started"
+		continue;
+	fi
+
+	eval "SHOME=\${SCREEN_HOME_${SNAME}:=}"
+	if [ ! -d "${SHOME}" ]; then
+		warn "Unknown screen instance: ${SNAME}"
+		continue;
+	fi
+
+	echo Starting ${SNAME} ...
+
+	cd "${SHOME}"
+	echo SCREENRC=./.screenrc screen -dm -S ${SNAME}
+	cd - > /dev/null
+done
