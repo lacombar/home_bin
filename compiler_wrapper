@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+var child_process = require('child_process');
+var fs = require('fs');
+
+var extensions = [".c", ".cxx", ".cc", ".C", ".cpp"]
+
+var argv = process.argv.slice(1)
+
+var getRealProgName = function(progname) {
+    var dashIdx
+
+    dashIdx = progname.lastIndexOf("-")
+
+    return progname.substr(dashIdx + 1)
+}
+
+
+var progName = getRealProgName(argv.shift())
+
+var directory = process.cwd()
+var command = progName + " " + argv.join(' ')
+var file = null
+
+var jsonFile = "compile_commands.json"
+
+var emitJSON = function(json) {
+    fs.writeFile(jsonFile, JSON.stringify(json), function(err) {
+        if (err)
+            console.log(err);
+    })
+}
+
+var appendEntry = function(json) {
+    var entry = {
+        directory: directory,
+        command: command,
+        file: file
+    }
+
+    json.push(entry)
+
+    emitJSON(json)
+}
+
+var parseJSON = function(err, data) {
+    var json
+
+    if (err) {
+        if (err.code != 'ENOENT') {
+            console.log(err);
+            return
+        }
+
+        data = "[]"
+    }
+
+    json = JSON.parse(data)
+
+    appendEntry(json)
+}
+
+var loadJSON = function() {
+    fs.readFile(jsonFile, parseJSON)
+}
+
+var foundSourceFile = function(f) {
+    if (file) {
+        console.log("Duplicate source file. Found: " + file + ", Duplicate:" + f);
+        return
+    }
+
+    file = f
+
+    loadJSON()
+}
+
+var findSourceFile = function (arg)
+{
+    extensions.forEach(function (ext) {
+        if (!arg.endsWith(ext))
+            return
+
+        fs.stat(arg, function (err, stat) {
+            if (err)
+                return
+
+            if (!stat.isFile())
+                return
+
+            foundSourceFile(arg)
+        })
+    })
+}
+
+argv.forEach(findSourceFile)
+
+child_process.spawn(progName, argv,  { stdio: 'inherit' })
