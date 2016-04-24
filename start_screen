@@ -71,6 +71,6 @@ for SNAME in ${SCREEN_NAMES}; do
 	echo Starting ${SNAME} ...
 
 	cd "${SHOME}"
-	echo SCREENRC=./.screenrc screen -dm -S ${SNAME}
+	SCREENRC=./.screenrc screen -dm -S ${SNAME}
 	cd - > /dev/null
 done
