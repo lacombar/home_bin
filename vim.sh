@@ -84,7 +84,7 @@ for _arg in $@; do
 done
 
 [ $# -gt 1 -a -z "${VIM_OPTS}" \
-  -o $# -gt 1 -a -n "${VIM_OPTS%%* -p*}" ] && VIM_OPTS="-p ${VIM_OPTS}"
+  -o $# -gt 1 -a -n "${VIM_OPTS%%* -p*}" ] && VIM_OPTS="${VIM_OPTS}"
 
 ${VIM} ${VIM_OPTS} "$@"
 
