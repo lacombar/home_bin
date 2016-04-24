@@ -43,6 +43,13 @@ for_each_repo()
 	local _repo
 
 	for _repo in ${ALL_REPOSITORIES}; do
+		if [ -n "${_start_from}" ]; then
+			if [ "${_repo}" != "${_start_from}" ]; then
+				continue;
+			fi
+			_start_from=;
+		fi
+
 		${_cb} ${_repo}
 	done
 }
@@ -149,14 +156,18 @@ ALL_REPOSITORIES=
 #
 
 _repos_dir="/data/Repositories"
+_start_from=""
 _repo_override=""
 
-while getopts d:r:p: f; do
+while getopts d:f:r:p: f; do
         case $f in
 	d)
 		_repos_dir="${OPTARG}"
 		[ -d "${_repos_dir}" ] || \
 			die "${_repos_dir}: no such directory"
+		;;
+	f)
+		_start_from="${OPTARG}"
 		;;
         r)
                 _repo_override="$OPTARG"
