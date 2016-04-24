@@ -172,7 +172,7 @@ while getopts d:f:r:p: f; do
         r)
                 _repo_override="$OPTARG"
 		[ -d "${_repo_override}" ] || \
-		    die "${_repo_override}: no such directory"
+			die "${_repo_override}: no such directory"
 		;;
 	p)
 		_repo_override="$OPTARG"
