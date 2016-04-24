@@ -147,12 +147,17 @@ ALL_REPOSITORIES=
 #
 #
 #
-cd /data/Repositories
 
+_repos_dir="/data/Repositories"
 _repo_override=""
 
-while getopts r:p: f; do
+while getopts d:r:p: f; do
         case $f in
+	d)
+		_repos_dir="${OPTARG}"
+		[ -d "${_repos_dir}" ] || \
+			die "${_repos_dir}: no such directory"
+		;;
         r)
                 _repo_override="$OPTARG"
 		[ -d "${_repo_override}" ] || \
@@ -164,6 +169,8 @@ while getopts r:p: f; do
         esac
 done
 shift $(($OPTIND - 1))
+
+cd "${_repos_dir}"
 
 _action=$1
 
